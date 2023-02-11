@@ -65,7 +65,7 @@ class _AddRecipeState extends State<AddRecipe> {
                   },
                 );
               }
-            )
+            ),
         ],
       ),
       actions: [

@@ -79,8 +79,54 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
 
   static String _displayStringForOption(Ingredient option) => option.name;
 
-
-
+  void showDialogImage(context) {
+    TextEditingController imageController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Ajouter une image"),
+          content: TextField(
+            controller: imageController,
+            decoration: const InputDecoration(
+                labelText: "URL de l'image"
+            ),
+            onSubmitted: (value) {
+              setState(() {
+                if (value.isEmpty) {
+                  image = null;
+                } else {
+                  image = value;
+                }
+              });
+              Navigator.of(context).pop();
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text("Annuler"),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  if (imageController.text.isEmpty) {
+                    image = null;
+                  } else {
+                    image = imageController.text;
+                  }
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text("Valider"),
+            ),
+          ],
+        );
+      }
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,16 +144,23 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.black)
                 ),
-                child: image != null ? Image.network(image!) : Center(
-                  child: CircleAvatar(
-                    child: IconButton(
-                      onPressed: () {
-                        //
+                child: image != null
+                    ? GestureDetector(
+                      onTap: () {
+                        showDialogImage(context);
                       },
-                      icon: const Icon(Icons.download, color: Colors.white,),
+                      child: Image.network(image!),
+                    )
+                    : Center(
+                      child: CircleAvatar(
+                        child: IconButton(
+                          onPressed: () {
+                            showDialogImage(context);
+                          },
+                          icon: const Icon(Icons.download, color: Colors.white,),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
               ),
             ),
             Padding(

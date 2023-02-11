@@ -38,6 +38,9 @@ class MySharedPreferences {
         jsonDecode(_prefs.getString('ingredients')!)
             .map((model) => Ingredient.fromJson(model))
             .toList());
+    // _ingredients.forEach((element) {
+    //   print(element.id);
+    // });
     _lastIngredientId = _ingredients.isNotEmpty ? _ingredients.last.id : 4;
     _recipes = List<Recipe>.from(
         jsonDecode(_prefs.getString('recipes')!)
@@ -122,12 +125,19 @@ class MySharedPreferences {
     await _prefs.setString('shoppingList', jsonEncode(_shoppingList));
   }
 
-  static Future removeIngredientFromShoppingList(Ingredient ingredient) async {
+  static Future minusIngredientToShoppingList(Ingredient ingredient) async {
     if (checkIngredientFromShoppingList(ingredient)) {
       _minusIngredientQuantityFromShoppingList(ingredient);
       if (getIngredientQuantityFromShoppingList(ingredient) == 0) {
         _shoppingList.removeWhere((element) => element["id"] == ingredient.id);
       }
+    }
+    await _prefs.setString('shoppingList', jsonEncode(_shoppingList));
+  }
+
+  static Future removeIngredientFromShoppingList(Ingredient ingredient) async {
+    if (checkIngredientFromShoppingList(ingredient)) {
+      _shoppingList.removeWhere((element) => element["id"] == ingredient.id);
     }
     await _prefs.setString('shoppingList', jsonEncode(_shoppingList));
   }

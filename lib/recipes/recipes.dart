@@ -40,8 +40,12 @@ class _RecipesState extends State<Recipes> {
                       child: Text('Ajouter à la liste de courses'),
                     ),
                     const PopupMenuItem(
+                      value: "edit",
+                      child: Text('Modifier'),
+                    ),
+                    const PopupMenuItem(
                       value: "delete",
-                      child: Text('Delete'),
+                      child: Text('Supprimer'),
                     ),
                   ];
                 },
@@ -54,6 +58,8 @@ class _RecipesState extends State<Recipes> {
                           MySharedPreferences.addIngredientToShoppingList(ingredient.ingredient, quantity: ingredient.quantity!);
                         }
                       }
+                      break;
+                    case "edit":
                       break;
                     case "delete":
                       await MySharedPreferences.removeRecipe(recipes[index]);

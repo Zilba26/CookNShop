@@ -2,6 +2,7 @@ import 'package:cook_n_shop/api/chat_gpt_api.dart';
 import 'package:cook_n_shop/ingredients/ingredients.dart';
 import 'package:cook_n_shop/my_shared_preferences.dart';
 import 'package:cook_n_shop/recipes/recipes.dart';
+import 'package:cook_n_shop/settings/settings.dart';
 import 'package:cook_n_shop/shop/shop.dart';
 import 'package:flutter/material.dart';
 
@@ -14,7 +15,7 @@ void main() async {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -22,6 +23,35 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
 
+  ThemeData _theme = ThemeData();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: "Cook'N Shop",
+      debugShowCheckedModeBanner: false,
+      theme: _theme,
+      home: Main(
+        onThemeChanged: (theme) {
+          setState(() {
+            _theme = theme;
+          });
+        },
+      ),
+    );
+  }
+}
+
+class Main extends StatefulWidget {
+  final Function(ThemeData) onThemeChanged;
+
+  const Main({super.key, required this.onThemeChanged});
+
+  @override
+  State<Main> createState() => _MainState();
+}
+
+class _MainState extends State<Main> {
   int _selectedIndex = 0;
   final List<Widget> _widgetOptions = [
     const Shop(),
@@ -31,40 +61,43 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: "Cook'N Shop",
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        //useMaterial3: true,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Cook'N Shop"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => Settings(
+                    onThemeChanged: widget.onThemeChanged
+                  )));
+            },
+          ),
+        ],
       ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text("Cook'N Shop"),
-        ),
-        body: _widgetOptions[_selectedIndex],
-        bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shop),
-              label: 'Shop',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.food_bank),
-              label: 'Ingrédients',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.receipt),
-              label: 'Recettes',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          onTap: (int index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-        ),
+      body: _widgetOptions[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shop),
+            label: 'Shop',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.food_bank),
+            label: 'Ingrédients',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt),
+            label: 'Recettes',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: (int index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
       ),
     );
   }

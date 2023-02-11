@@ -18,9 +18,19 @@ class _ShopState extends State<Shop> {
         child: Column(
           children: MySharedPreferences.shoppingList.map((elt) {
             Ingredient ingredient = MySharedPreferences.ingredients.where((element) => element.id == elt["id"]).first;
-            return ListTile(
-              title: Text(ingredient.name),
-              trailing: Text(elt["quantity"].toString() + ingredient.unit.unit),
+            return Dismissible(
+              key: ValueKey<int>(ingredient.id),
+              background: Container(
+                color: Colors.red,
+              ),
+              onDismissed: (direction) async {
+                await MySharedPreferences.removeIngredientFromShoppingList(ingredient);
+                setState(() {});
+              },
+              child: ListTile(
+                title: Text(ingredient.name),
+                trailing: Text(elt["quantity"].toString() + ingredient.unit.unit),
+              ),
             );
           }).toList()
         ),

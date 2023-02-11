@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cook_n_shop/models/ingredient.dart';
 import 'package:cook_n_shop/models/recipe_ingredient.dart';
 import 'package:cook_n_shop/models/units.dart';
@@ -13,7 +15,8 @@ class MarmitonApi {
   static const searchURL = '$recipeURL/recherche.aspx';
 
   static Future<String> search(String query) async {
-    final response = await http.get(Uri.parse('$searchURL?aqt=$query'));
+    Uri uri = Uri.parse('$searchURL?aqt=$query');
+    final response = await http.get(uri);
     return response.body;
   }
 
