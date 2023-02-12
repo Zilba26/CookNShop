@@ -1,11 +1,6 @@
-import 'dart:convert';
-
-import 'package:cook_n_shop/ingredients/add_ingredient.dart';
-import 'package:cook_n_shop/api/marmiton_api.dart';
 import 'package:cook_n_shop/my_shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import '../models/ingredient.dart';
 
 class Ingredients extends StatefulWidget {
@@ -17,7 +12,11 @@ class Ingredients extends StatefulWidget {
 
 class _IngredientsState extends State<Ingredients> {
   List<Ingredient> ingredients = [];
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
+  final TextEditingController _quantityController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  late final List<FocusNode> _focusNodes;
+  int? quantityIndex;
 
   @override
   void initState() {
@@ -33,6 +32,10 @@ class _IngredientsState extends State<Ingredients> {
     setState(() {
       ingredients = localIngredients;
     });
+    _focusNodes = List.generate(
+      ingredients.length,
+          (index) => FocusNode(),
+    );
   }
 
   @override
@@ -46,8 +49,8 @@ class _IngredientsState extends State<Ingredients> {
               padding:
                   const EdgeInsets.only(left: 16.0, top: 4.0, bottom: 4.0),
               decoration: BoxDecoration(
-                color: Colors.grey[400],
-                borderRadius: BorderRadius.circular(10),
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -57,7 +60,8 @@ class _IngredientsState extends State<Ingredients> {
                       controller: _controller,
                       decoration: const InputDecoration(
                           hintText: 'Ajouter un ingrédient',
-                          border: InputBorder.none),
+                          border: InputBorder.none
+                      ),
                     ),
                   ),
                   IconButton(
@@ -92,11 +96,63 @@ class _IngredientsState extends State<Ingredients> {
                         icon: const Icon(Icons.remove),
                         onPressed: () {
                           setState(() {
-                            MySharedPreferences.removeIngredientFromShoppingList(ingredients[index]);
+                            MySharedPreferences.minusIngredientToShoppingList(ingredients[index]);
                           });
                         },
                       ),
-                      Text((MySharedPreferences.checkIngredientFromShoppingList(ingredients[index]) ? MySharedPreferences.getIngredientQuantityFromShoppingList(ingredients[index]).toString() : "0") + ingredients[index].unit.unit),
+                      quantityIndex == index
+                        ? Row(
+                          children: [
+                            IntrinsicWidth(
+                              child: Focus(
+                                onFocusChange: (bool hasFocus) {
+                                  print("focus change $hasFocus");
+                                  setState(() {
+                                    if (!hasFocus) quantityIndex = null;
+                                  });
+                                },
+                                child: TextField(
+                                  controller: _quantityController,
+                                  focusNode: _focusNodes[index],
+                                  keyboardType: TextInputType.number,
+                                  decoration: const InputDecoration(
+                                      border: InputBorder.none
+                                  ),
+                                  inputFormatters: <TextInputFormatter>[
+                                    FilteringTextInputFormatter.digitsOnly
+                                  ],
+                                  onSubmitted: (String value) {
+                                    if (quantityIndex != null) {
+                                      if (_quantityController.text.isEmpty) {
+                                        MySharedPreferences.removeIngredientFromShoppingList(ingredients[quantityIndex!]);
+                                      } else {
+                                        MySharedPreferences.setIngredientQuantityFromShoppingList(ingredients[quantityIndex!], int.parse(_quantityController.text));
+                                      }
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                            Text(ingredients[index].unit.unit),
+                          ],
+                        )
+                        : GestureDetector(
+                          onTap: () {
+                            if (quantityIndex != null) {
+                              if (_quantityController.text.isEmpty) {
+                                MySharedPreferences.removeIngredientFromShoppingList(ingredients[quantityIndex!]);
+                              } else {
+                                MySharedPreferences.setIngredientQuantityFromShoppingList(ingredients[quantityIndex!], int.parse(_quantityController.text));
+                              }
+                            }
+                            setState(() {
+                              _quantityController.text = MySharedPreferences.checkIngredientFromShoppingList(ingredients[index]) ? MySharedPreferences.getIngredientQuantityFromShoppingList(ingredients[index]).toString() : "";
+                              quantityIndex = index;
+                              _focusNodes[index].requestFocus();
+                            });
+                          },
+                          child: Text((MySharedPreferences.checkIngredientFromShoppingList(ingredients[index]) ? MySharedPreferences.getIngredientQuantityFromShoppingList(ingredients[index]).toString() : "0") + ingredients[index].unit.unit)
+                      ),
                       IconButton(
                         icon: const Icon(Icons.add),
                         onPressed: () {
@@ -109,10 +165,8 @@ class _IngredientsState extends State<Ingredients> {
                         icon: const Icon(Icons.delete),
                         onPressed: () {
                           setState(() {
-                            Ingredient ingredientRemoved =
-                                ingredients.removeAt(index);
-                            MySharedPreferences.removeIngredient(
-                                ingredientRemoved);
+                            Ingredient ingredientRemoved = ingredients.removeAt(index);
+                            MySharedPreferences.removeIngredient(ingredientRemoved);
                           });
                         },
                       ),

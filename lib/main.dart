@@ -59,11 +59,24 @@ class _MainState extends State<Main> {
     const Recipes()
   ];
 
+  String getAppbarTitle() {
+    switch (_selectedIndex) {
+      case 0:
+        return "Ma liste de courses";
+      case 1:
+        return "Mes ingrédients";
+      case 2:
+        return "Mes recettes";
+      default:
+        return "Cook'N Shop";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Cook'N Shop"),
+        title: Text(getAppbarTitle()),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),

@@ -25,6 +25,10 @@ class AddRecipeDefault extends StatefulWidget {
 
 class _AddRecipeDefaultState extends State<AddRecipeDefault> {
 
+  final _formKey = GlobalKey<FormState>();
+  bool _ingredientValidate = true;
+  bool _stepValidate = true;
+
   String? image;
 
   final TextEditingController _nameController = TextEditingController();
@@ -135,214 +139,255 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
         title: const Text("Création d'une recette"),
       ),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Container(
-                height: 200,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black)
-                ),
-                child: image != null
-                    ? GestureDetector(
-                      onTap: () {
-                        showDialogImage(context);
-                      },
-                      child: Image.network(image!),
-                    )
-                    : Center(
-                      child: CircleAvatar(
-                        child: IconButton(
-                          onPressed: () {
-                            showDialogImage(context);
-                          },
-                          icon: const Icon(Icons.download, color: Colors.white,),
-                        ),
-                      ),
-                    ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: "Nom de la recette",
-                  border: OutlineInputBorder()
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                controller: _descriptionController,
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-                decoration: const InputDecoration(
-                  labelText: "Description",
-                  border: OutlineInputBorder()
-                ),
-              ),
-            ),
-            Column(
-              children: _ingredientsControllers.map((controller) {
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Autocomplete<Ingredient>(
-                          displayStringForOption: _displayStringForOption,
-                          optionsBuilder: (TextEditingValue textEditingValue) {
-                            if (textEditingValue.text.isEmpty) {
-                              return const Iterable<Ingredient>.empty();
-                            }
-                            return MySharedPreferences.ingredients.where((ingredient) {
-                              return ingredient.name.toLowerCase().contains(textEditingValue.text.toLowerCase());
-                            });
-                          },
-                          onSelected: (Ingredient selection) {
-                            setState(() {
-                              controller.ingredient = selection;
-                              controller.unitNotifier.value = selection.unit;
-                            });
-                          },
-                          fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
-                            fieldTextEditingController.addListener(() {
-                              if (_ingredientsControllers.last.controller.text.isNotEmpty) {
-                                _addIngredientController();
-                              } else {
-                                if (_ingredientsControllers.length > 1 && _ingredientsControllers[_ingredientsControllers.length - 2].controller.text.isEmpty) {
-                                  setState(() {
-                                    _ingredientsControllers.removeLast();
-                                  });
-                                }
-                              }
-                            });
-                            _ingredientsControllers[_ingredientsControllers.indexOf(controller)].controller = fieldTextEditingController;
-                            return TextField(
-                              controller: fieldTextEditingController,
-                              focusNode: fieldFocusNode,
-                              onSubmitted: (String value) {
-                                onFieldSubmitted();
-                              },
-                              decoration: const InputDecoration(
-                                labelText: "Ingrédient",
-                                border: OutlineInputBorder()
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 10,),
-                      Expanded(
-                        child: TextField(
-                          controller: _ingredientsControllers[_ingredientsControllers.indexOf(controller)].quantityController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            labelText: "Quantité",
-                            border: OutlineInputBorder()
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10,),
-                      UniteDropdownButton(
-                        // onTap: (value) {
-                        //   _ingredientsControllers[_ingredientsControllers.indexOf(controller)].unit = value;
-                        // },
-                        controller: _ingredientsControllers[_ingredientsControllers.indexOf(controller)].unitNotifier,
-                      ),
-                      const SizedBox(width: 10,),
-                    ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Container(
+                  height: 200,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black)
                   ),
-                );
-              }).toList(),
-            ),
-            SizedBox(
-              width: double.infinity,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 10.0, top: 20.0),
-                child: Text("Etapes :", style: Theme.of(context).textTheme.titleLarge,),
-              ),
-            ),
-            Column(
-              children: _stepsControllers.map((controller) {
-                return Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 20.0),
-                      child: Text("${_stepsControllers.indexOf(controller) + 1}. "),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: TextField(
-                          controller: controller,
-                          maxLines: null,
-                          keyboardType: TextInputType.multiline,
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Etape ${_stepsControllers.indexOf(controller) + 1}",
+                  child: image != null
+                      ? GestureDetector(
+                        onTap: () {
+                          showDialogImage(context);
+                        },
+                        child: Image.network(image!),
+                      )
+                      : Center(
+                        child: CircleAvatar(
+                          child: IconButton(
+                            onPressed: () {
+                              showDialogImage(context);
+                            },
+                            icon: const Icon(Icons.download, color: Colors.white,),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                String name = _nameController.text;
-                String description = _descriptionController.text;
-                List<RecipeIngredient> ingredients = [];
-                for (int i = 0; i < _ingredientsControllers.length; i++) {
-                  if (_ingredientsControllers[i].controller.text.isNotEmpty) {
-                    Ingredient ingredient;
-                    if (_ingredientsControllers[i].ingredient != null && _ingredientsControllers[i].ingredient?.name == _ingredientsControllers[i].controller.text) {
-                      if (_ingredientsControllers[i].ingredient?.unit == _ingredientsControllers[i].unitNotifier.value) {
-                        ingredient = _ingredientsControllers[i].ingredient!;
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextFormField(
+                  controller: _nameController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "Veuillez entrer un nom";
+                    }
+                    return null;
+                  },
+                  decoration: const InputDecoration(
+                    labelText: "Nom de la recette",
+                    border: OutlineInputBorder()
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: _descriptionController,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  decoration: const InputDecoration(
+                    labelText: "Description",
+                    border: OutlineInputBorder()
+                  ),
+                ),
+              ),
+              FormField(
+                validator: (value) {
+                  if (_ingredientsControllers.isEmpty || _ingredientsControllers.first.controller.text.isEmpty) {
+                    return "Veuillez entrer au moins un ingrédient";
+                  }
+                  return null;
+                },
+                builder: (FormFieldState state) {
+                  return Column(
+                    children: _ingredientsControllers.map((controller) {
+                      return Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: Autocomplete<Ingredient>(
+                                displayStringForOption: _displayStringForOption,
+                                optionsBuilder: (TextEditingValue textEditingValue) {
+                                  if (textEditingValue.text.isEmpty) {
+                                    return const Iterable<Ingredient>.empty();
+                                  }
+                                  return MySharedPreferences.ingredients.where((ingredient) {
+                                    return ingredient.name.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                                  });
+                                },
+                                onSelected: (Ingredient selection) {
+                                  setState(() {
+                                    controller.ingredient = selection;
+                                    controller.unitNotifier.value = selection.unit;
+                                  });
+                                },
+                                fieldViewBuilder: (BuildContext context, TextEditingController fieldTextEditingController, FocusNode fieldFocusNode, VoidCallback onFieldSubmitted) {
+                                  fieldTextEditingController.addListener(() {
+                                    if (_ingredientsControllers.last.controller.text.isNotEmpty) {
+                                      _addIngredientController();
+                                    } else {
+                                      if (_ingredientsControllers.length > 1 && _ingredientsControllers[_ingredientsControllers.length - 2].controller.text.isEmpty) {
+                                        setState(() {
+                                          _ingredientsControllers.removeLast();
+                                        });
+                                      }
+                                    }
+                                  });
+                                  _ingredientsControllers[_ingredientsControllers.indexOf(controller)].controller = fieldTextEditingController;
+                                  return TextField(
+                                    controller: fieldTextEditingController,
+                                    focusNode: fieldFocusNode,
+                                    onSubmitted: (String value) {
+                                      onFieldSubmitted();
+                                    },
+                                    decoration: InputDecoration(
+                                      labelText: "Ingrédient",
+                                      border: const OutlineInputBorder(),
+                                      errorText: (!_ingredientValidate && _ingredientsControllers.indexOf(controller) == 0) ? 'Inscrivez au moins un ingrédient' : null,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10,),
+                            Expanded(
+                              child: TextField(
+                                controller: _ingredientsControllers[_ingredientsControllers.indexOf(controller)].quantityController,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: "Quantité",
+                                  border: OutlineInputBorder()
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10,),
+                            UniteDropdownButton(
+                              // onTap: (value) {
+                              //   _ingredientsControllers[_ingredientsControllers.indexOf(controller)].unit = value;
+                              // },
+                              controller: _ingredientsControllers[_ingredientsControllers.indexOf(controller)].unitNotifier,
+                            ),
+                            const SizedBox(width: 10,),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  );
+                }
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 10.0, top: 20.0),
+                  child: Text("Etapes :", style: Theme.of(context).textTheme.titleLarge,),
+                ),
+              ),
+              FormField(
+                validator: (value) {
+                  if (_stepsControllers.isEmpty || _stepsControllers.first.text.isEmpty) {
+                    return "Veuillez entrer au moins une étape";
+                  }
+                  return null;
+                },
+                builder: (context) {
+                  return Column(
+                    children: _stepsControllers.map((controller) {
+                      return Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 20.0),
+                            child: Text("${_stepsControllers.indexOf(controller) + 1}. "),
+                          ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: TextField(
+                                controller: controller,
+                                maxLines: null,
+                                keyboardType: TextInputType.multiline,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: "Etape ${_stepsControllers.indexOf(controller) + 1}",
+                                  errorText: (!_stepValidate && _stepsControllers.indexOf(controller) == 0) ? 'Inscrivez au moins une étape' : null,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  );
+                }
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () {
+                  _ingredientValidate = _ingredientsControllers.first.controller.text.isNotEmpty;
+                  _stepValidate = _stepsControllers.first.text.isNotEmpty;
+                  if (!_formKey.currentState!.validate()) return;
+                    String name = _nameController.text;
+                  String description = _descriptionController.text;
+                  List<RecipeIngredient> ingredients = [];
+                  for (int i = 0; i < _ingredientsControllers.length; i++) {
+                    if (_ingredientsControllers[i].controller.text.isNotEmpty) {
+                      Ingredient ingredient;
+                      if (_ingredientsControllers[i].ingredient != null && _ingredientsControllers[i].ingredient?.name == _ingredientsControllers[i].controller.text) {
+                        if (_ingredientsControllers[i].ingredient?.unit == _ingredientsControllers[i].unitNotifier.value) {
+                          ingredient = _ingredientsControllers[i].ingredient!;
+                        } else {
+                          ingredient = Ingredient.fromName(
+                            _ingredientsControllers[i].ingredient!.name,
+                            img: _ingredientsControllers[i].ingredient!.img,
+                            unit: _ingredientsControllers[i].unitNotifier.value,
+                          );
+                          MySharedPreferences.addIngredient(ingredient);
+                        }
                       } else {
                         ingredient = Ingredient.fromName(
-                          _ingredientsControllers[i].ingredient!.name,
-                          img: _ingredientsControllers[i].ingredient!.img,
+                          _ingredientsControllers[i].controller.text,
                           unit: _ingredientsControllers[i].unitNotifier.value,
                         );
                         MySharedPreferences.addIngredient(ingredient);
                       }
-                    } else {
-                      ingredient = Ingredient.fromName(
-                        _ingredientsControllers[i].controller.text,
-                        unit: _ingredientsControllers[i].unitNotifier.value,
+                      int? quantity = _ingredientsControllers[i].quantityController.text.isNotEmpty ? int.parse(_ingredientsControllers[i].quantityController.text) : null;
+                      RecipeIngredient recipeIngredient = RecipeIngredient(
+                        ingredient: ingredient,
+                        quantity: quantity,
+                        text: "$quantity${ingredient.unit} ${ingredient.name}",
                       );
-                      MySharedPreferences.addIngredient(ingredient);
+                      ingredients.add(recipeIngredient);
                     }
-                    int? quantity = _ingredientsControllers[i].quantityController.text.isNotEmpty ? int.parse(_ingredientsControllers[i].quantityController.text) : null;
-                    RecipeIngredient recipeIngredient = RecipeIngredient(
-                      ingredient: ingredient,
-                      quantity: quantity,
-                      text: "$quantity${ingredient.unit} ${ingredient.name}",
-                    );
-                    ingredients.add(recipeIngredient);
                   }
-                }
-                List<String> steps = _stepsControllers.map((controller) => controller.text).toList();
-                for (int i = 0; i < steps.length; i++) {
-                  if (steps[i].isEmpty) {
-                    steps.removeAt(i);
+                  List<String> steps = _stepsControllers.map((controller) => controller.text).toList();
+                  for (int i = 0; i < steps.length; i++) {
+                    if (steps[i].isEmpty) {
+                      steps.removeAt(i);
+                    }
                   }
-                }
-                Recipe recipe = Recipe(name: name, description: description, image: image, ingredients: ingredients, steps: steps);
-                MySharedPreferences.addRecipe(recipe);
-                Navigator.pop(context);
-              },
-              child: const Text("Ajouter la recette"),
-            ),
-            const SizedBox(height: 20),
-          ],
+                  Recipe recipe = Recipe(name: name, description: description, image: image, ingredients: ingredients, steps: steps);
+                  MySharedPreferences.addRecipe(recipe);
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text("Ajouter la recette", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 18),)
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );

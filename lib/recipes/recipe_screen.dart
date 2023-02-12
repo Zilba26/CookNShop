@@ -22,41 +22,47 @@ class RecipeScreen extends StatelessWidget {
               child: Text(recipe.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
             ),
             if (recipe.description != null) Text(recipe.description!),
-            Column(
-              children: recipe.ingredients.map((ingredient) {
-                return Column(
-                  children: [
-                    Row(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Container(
-                            width: 12,
-                            height: 12,
-                            decoration: const BoxDecoration(
-                              color: Colors.black,
-                              shape: BoxShape.circle,
+            Padding(
+              padding: const EdgeInsets.only(left: 12.0),
+              child: Column(
+                children: recipe.ingredients.map((ingredient) {
+                  return Column(
+                    children: [
+                      Row(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: const BoxDecoration(
+                                color: Colors.black,
+                                shape: BoxShape.circle,
+                              ),
                             ),
                           ),
-                        ),
-                        Expanded(child: Text(ingredient.text, style: const TextStyle(fontSize: 17))),
-                      ]
-                    ),
-                    const SizedBox(height: 4)
-                  ],
-                );
-              }).toList(),
+                          Expanded(child: Text(ingredient.text, style: const TextStyle(fontSize: 17))),
+                        ]
+                      ),
+                      const SizedBox(height: 4)
+                    ],
+                  );
+                }).toList(),
+              ),
             ),
             const SizedBox(height: 20),
-            Column(
-              children: recipe.steps.map((step) {
-                return ListTile(
-                  minLeadingWidth: 0,
-                  horizontalTitleGap: 8,
-                  leading: Text('${recipe.steps.indexOf(step) + 1}. '),
-                  title: Text(step),
-                );
-              }).toList()
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Column(
+                children: recipe.steps.map((step) {
+                  return ListTile(
+                    minLeadingWidth: 0,
+                    horizontalTitleGap: 8,
+                    leading: Text('${recipe.steps.indexOf(step) + 1}. '),
+                    title: Text(step),
+                  );
+                }).toList()
+              ),
             ),
             const SizedBox(height: 20),
           ],

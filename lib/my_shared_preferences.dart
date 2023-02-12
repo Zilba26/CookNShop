@@ -97,6 +97,18 @@ class MySharedPreferences {
     return _shoppingList.firstWhere((element) => element["id"] == ingredient.id)["quantity"];
   }
 
+  static setIngredientQuantityFromShoppingList(Ingredient ingredient, int quantity) async {
+    if (checkIngredientFromShoppingList(ingredient)) {
+      _shoppingList.firstWhere((element) => element["id"] == ingredient.id)["quantity"] = quantity;
+    } else {
+      _shoppingList.add({
+        "id": ingredient.id,
+        "quantity": quantity,
+      });
+    }
+    await _prefs.setString('shoppingList', jsonEncode(_shoppingList));
+  }
+
   static _plusIngredientQuantityFromShoppingList(Ingredient ingredient, {int quantity = 1}) {
     _shoppingList.firstWhere((element) => element["id"] == ingredient.id)["quantity"] = (_shoppingList.firstWhere((element) => element["id"] == ingredient.id)["quantity"]! + quantity);
   }
