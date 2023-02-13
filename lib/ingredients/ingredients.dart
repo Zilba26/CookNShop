@@ -2,6 +2,7 @@ import 'package:cook_n_shop/my_shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/ingredient.dart';
+import '../models/recipe.dart';
 
 class Ingredients extends StatefulWidget {
   const Ingredients({Key? key}) : super(key: key);
@@ -46,8 +47,7 @@ class _IngredientsState extends State<Ingredients> {
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: Container(
-              padding:
-                  const EdgeInsets.only(left: 16.0, top: 4.0, bottom: 4.0),
+              padding: const EdgeInsets.only(left: 16.0, top: 4.0, bottom: 4.0),
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(8),
@@ -55,6 +55,8 @@ class _IngredientsState extends State<Ingredients> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  const Icon(Icons.restaurant_menu),
+                  const SizedBox(width: 16.0),
                   Expanded(
                     child: TextField(
                       controller: _controller,
@@ -106,7 +108,6 @@ class _IngredientsState extends State<Ingredients> {
                             IntrinsicWidth(
                               child: Focus(
                                 onFocusChange: (bool hasFocus) {
-                                  print("focus change $hasFocus");
                                   setState(() {
                                     if (!hasFocus) quantityIndex = null;
                                   });
@@ -165,8 +166,46 @@ class _IngredientsState extends State<Ingredients> {
                         icon: const Icon(Icons.delete),
                         onPressed: () {
                           setState(() {
-                            Ingredient ingredientRemoved = ingredients.removeAt(index);
-                            MySharedPreferences.removeIngredient(ingredientRemoved);
+                            List<Recipe> recipes = MySharedPreferences.checkIngredientInRecipes(ingredients[index]);
+                            if (recipes.isEmpty) {
+                              Ingredient ingredientRemoved = ingredients.removeAt(index);
+                              MySharedPreferences.removeIngredient(ingredientRemoved);
+                              MySharedPreferences.removeIngredientFromShoppingList(ingredientRemoved);
+                            } else {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: const Text("Supprimer l'ingrédient"),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text("Cet ingrédient est utilisé dans les recettes suivantes :"),
+                                        ...recipes.map((recipe) => Text("- ${recipe.name}")).toList(),
+                                      ],
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        child: const Text("Annuler"),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                      TextButton(
+                                        child: const Text("Supprimer"),
+                                        onPressed: () {
+                                          Ingredient ingredientRemoved = ingredients.removeAt(index);
+                                          MySharedPreferences.removeIngredient(ingredientRemoved);
+                                          MySharedPreferences.removeIngredientFromShoppingList(ingredientRemoved);
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                }
+                              );
+                            }
                           });
                         },
                       ),

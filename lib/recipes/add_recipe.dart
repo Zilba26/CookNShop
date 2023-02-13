@@ -42,10 +42,12 @@ class _AddRecipeState extends State<AddRecipe> {
             },
             child: const Text('Ajouter une recette marmiton'),
           ),
+          //Text(MySharedPreferences.errorsMSG.join('\n')),
           if (_isMarmiton)
             Autocomplete<Map<String, String>>(
               displayStringForOption: _displayStringForOption,
               optionsBuilder: (TextEditingValue textEditingValue) async {
+                MySharedPreferences.errorsMSG.clear();
                 if (textEditingValue.text == '') {
                   return const Iterable<Map<String, String>>.empty();
                 }

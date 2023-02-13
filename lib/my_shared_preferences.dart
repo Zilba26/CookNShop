@@ -14,6 +14,7 @@ class MySharedPreferences {
   static late int _lastRecipeId;
   static late List<Map<String, dynamic>> _shoppingList;
   static late List<Unit> _unites;
+  static Set<String> errorsMSG = {};
 
   static Future init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -68,6 +69,10 @@ class MySharedPreferences {
     _lastIngredientId++;
     await _prefs.setString('ingredients',
         jsonEncode(_ingredients.map((e) => e.toJson()).toList()));
+  }
+
+  static List<Recipe> checkIngredientInRecipes(Ingredient ingredient) {
+    return _recipes.where((element) => element.ingredients.any((element) => element.ingredient.id == ingredient.id)).toList();
   }
 
   static Future removeIngredient(Ingredient ingredient) async {

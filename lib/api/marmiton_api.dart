@@ -16,8 +16,15 @@ class MarmitonApi {
 
   static Future<String> search(String query) async {
     Uri uri = Uri.parse('$searchURL?aqt=$query');
-    final response = await http.get(uri);
-    return response.body;
+    http.Response? response;
+    try {
+      response = await http.get(uri).timeout(const Duration(seconds: 5));
+    } on TimeoutException catch (e) {
+      MySharedPreferences.errorsMSG.add("TimeoutException:");
+    } catch (e) {
+      MySharedPreferences.errorsMSG.add("Exception:");
+    }
+    return response!.body;
   }
 
   static Future<String> searchRecipe(String recipe) async {

@@ -54,7 +54,7 @@ class _RecipesState extends State<Recipes> {
                     case "add":
                       List<RecipeIngredient> ingredients = recipes[index].ingredients;
                       for (RecipeIngredient ingredient in ingredients) {
-                        if (ingredient.quantity != null) {
+                        if (MySharedPreferences.ingredients.any((element) => element.id == ingredient.ingredient.id) && ingredient.quantity != null) {
                           MySharedPreferences.addIngredientToShoppingList(ingredient.ingredient, quantity: ingredient.quantity!);
                         }
                       }

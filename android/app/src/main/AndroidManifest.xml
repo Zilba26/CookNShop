@@ -1,7 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="fr.zilba.cook_n_shop">
     <uses-permission android:name="android.permission.INTERNET"/>
-   <application
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <application
         android:label="cook_n_shop"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

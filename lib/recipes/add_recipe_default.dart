@@ -4,6 +4,7 @@ import 'package:cook_n_shop/models/recipe.dart';
 import 'package:cook_n_shop/models/recipe_ingredient.dart';
 import 'package:cook_n_shop/models/units.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../my_shared_preferences.dart';
 
@@ -245,6 +246,9 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                                   return TextField(
                                     controller: fieldTextEditingController,
                                     focusNode: fieldFocusNode,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly
+                                    ],
                                     onSubmitted: (String value) {
                                       onFieldSubmitted();
                                     },

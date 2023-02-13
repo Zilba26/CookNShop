@@ -34,10 +34,10 @@ dependencies:
 
   chat_gpt_sdk: ^1.0.2+4
   flutter_colorpicker: ^1.0.3
+  flutter_speed_dial: ^6.2.0
   html: ^0.15.1
   http: ^0.13.5
   shared_preferences: ^2.0.17
-
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
