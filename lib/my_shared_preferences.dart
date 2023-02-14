@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cook_n_shop/models/ingredient.dart';
 import 'package:cook_n_shop/models/recipe.dart';
+import 'package:cook_n_shop/models/shopping_item.dart';
 import 'package:cook_n_shop/models/units.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,7 +13,7 @@ class MySharedPreferences {
   static late int _lastIngredientId;
   static late List<Recipe> _recipes;
   static late int _lastRecipeId;
-  static late List<Map<String, dynamic>> _shoppingList;
+  static late List<ShoppingItem> _shoppingList;
   static late List<Unit> _unites;
   static Set<String> errorsMSG = {};
 
@@ -48,8 +49,10 @@ class MySharedPreferences {
             .map((model) => Recipe.fromJson(model))
             .toList());
     _lastRecipeId = _recipes.isNotEmpty ? _recipes.last.id : 0;
-    _shoppingList = List<Map<String, dynamic>>.from(
-        jsonDecode(_prefs.getString('shoppingList')!).toList());
+    _shoppingList = List<ShoppingItem>.from(
+        jsonDecode(_prefs.getString('shoppingList')!)
+            .map((model) => ShoppingItem.fromJson(model))
+            .toList());
 
     _unites = baseUnits + List<Unit>.from(
         jsonDecode(_prefs.getString('unites')!)
@@ -61,7 +64,7 @@ class MySharedPreferences {
   static int get lastIngredientId => _lastIngredientId;
   static List<Recipe> get recipes => _recipes;
   static int get lastRecipeId => _lastRecipeId;
-  static List<Map<String, dynamic>> get shoppingList => _shoppingList;
+  static List<ShoppingItem> get shoppingList => _shoppingList;
   static List<Unit> get unites => _unites;
 
   static Future addIngredient(Ingredient ingredient) async {
@@ -81,6 +84,12 @@ class MySharedPreferences {
         jsonEncode(_ingredients.map((e) => e.toJson()).toList()));
   }
 
+  static Future updateIngredient(Ingredient ingredient) async {
+    _ingredients[_ingredients.indexWhere((element) => element.id == ingredient.id)] = ingredient;
+    await _prefs.setString('ingredients',
+        jsonEncode(_ingredients.map((e) => e.toJson()).toList()));
+  }
+
   static Future addRecipe(Recipe recipe) async {
     _recipes.add(recipe);
     _lastRecipeId++;
@@ -95,33 +104,30 @@ class MySharedPreferences {
   }
 
   static checkIngredientFromShoppingList(Ingredient ingredient) {
-    return _shoppingList.any((element) => element["id"] == ingredient.id);
+    return _shoppingList.any((element) => element.ingredient.id == ingredient.id);
   }
 
   static getIngredientQuantityFromShoppingList(Ingredient ingredient) {
-    return _shoppingList.firstWhere((element) => element["id"] == ingredient.id)["quantity"];
+    return _shoppingList.firstWhere((element) => element.ingredient.id == ingredient.id).quantity;
   }
 
   static setIngredientQuantityFromShoppingList(Ingredient ingredient, int quantity) async {
     if (checkIngredientFromShoppingList(ingredient)) {
-      _shoppingList.firstWhere((element) => element["id"] == ingredient.id)["quantity"] = quantity;
+      _shoppingList.firstWhere((element) => element.ingredient.id == ingredient.id).quantity = quantity;
     } else {
-      _shoppingList.add({
-        "id": ingredient.id,
-        "quantity": quantity,
-      });
+      _shoppingList.add(ShoppingItem(ingredient: ingredient, quantity: quantity));
     }
     await _prefs.setString('shoppingList', jsonEncode(_shoppingList));
   }
 
   static _plusIngredientQuantityFromShoppingList(Ingredient ingredient, {int quantity = 1}) {
-    _shoppingList.firstWhere((element) => element["id"] == ingredient.id)["quantity"] = (_shoppingList.firstWhere((element) => element["id"] == ingredient.id)["quantity"]! + quantity);
+    _shoppingList.firstWhere((element) => element.ingredient.id == ingredient.id).quantity = (_shoppingList.firstWhere((element) => element.ingredient.id == ingredient.id).quantity+ quantity);
   }
 
   static _minusIngredientQuantityFromShoppingList(Ingredient ingredient, {int quantity = 1}) {
-    _shoppingList.firstWhere((element) => element["id"] == ingredient.id)["quantity"] = (_shoppingList.firstWhere((element) => element["id"] == ingredient.id)["quantity"]! - quantity);
-    if (_shoppingList.firstWhere((element) => element["id"] == ingredient.id)["quantity"]! < 0) {
-      _shoppingList.firstWhere((element) => element["id"] == ingredient.id)["quantity"] = 0;
+    _shoppingList.firstWhere((element) => element.ingredient.id == ingredient.id).quantity = (_shoppingList.firstWhere((element) => element.ingredient.id == ingredient.id).quantity- quantity);
+    if (_shoppingList.firstWhere((element) => element.ingredient.id == ingredient.id).quantity< 0) {
+      _shoppingList.firstWhere((element) => element.ingredient.id == ingredient.id).quantity = 0;
     }
   }
 
@@ -130,23 +136,46 @@ class MySharedPreferences {
     await _prefs.setString('shoppingList', jsonEncode(_shoppingList));
   }
 
-  static Future addIngredientToShoppingList(Ingredient ingredient, {int quantity = 1}) async {
+  static Future addIngredientToShoppingList(Ingredient ingredient, {int? quantity}) async {
+    if (quantity == null) {
+      switch (ingredient.unit.fullName) {
+        case "millilitre":
+        case "centilitre":
+        case "décilitre":
+        case "gramme":
+        case "milligramme":
+          quantity = 10;
+          break;
+        default:
+          quantity = 1;
+      }
+    }
     if (checkIngredientFromShoppingList(ingredient)) {
       _plusIngredientQuantityFromShoppingList(ingredient, quantity: quantity);
     } else {
-      _shoppingList.add({
-        "id": ingredient.id,
-        "quantity": quantity,
-      });
+      _shoppingList.add(ShoppingItem(ingredient: ingredient, quantity: quantity));
     }
     await _prefs.setString('shoppingList', jsonEncode(_shoppingList));
   }
 
-  static Future minusIngredientToShoppingList(Ingredient ingredient) async {
+  static Future minusIngredientToShoppingList(Ingredient ingredient, {int? quantity}) async {
+    if (quantity == null) {
+      switch (ingredient.unit.fullName) {
+        case "millilitre":
+        case "centilitre":
+        case "décilitre":
+        case "gramme":
+        case "milligramme":
+          quantity = 10;
+          break;
+        default:
+          quantity = 1;
+      }
+    }
     if (checkIngredientFromShoppingList(ingredient)) {
-      _minusIngredientQuantityFromShoppingList(ingredient);
-      if (getIngredientQuantityFromShoppingList(ingredient) == 0) {
-        _shoppingList.removeWhere((element) => element["id"] == ingredient.id);
+      _minusIngredientQuantityFromShoppingList(ingredient, quantity: quantity);
+      if (getIngredientQuantityFromShoppingList(ingredient) <= 0) {
+        _shoppingList.removeWhere((element) => element.ingredient.id == ingredient.id);
       }
     }
     await _prefs.setString('shoppingList', jsonEncode(_shoppingList));
@@ -154,7 +183,7 @@ class MySharedPreferences {
 
   static Future removeIngredientFromShoppingList(Ingredient ingredient) async {
     if (checkIngredientFromShoppingList(ingredient)) {
-      _shoppingList.removeWhere((element) => element["id"] == ingredient.id);
+      _shoppingList.removeWhere((element) => element.ingredient.id == ingredient.id);
     }
     await _prefs.setString('shoppingList', jsonEncode(_shoppingList));
   }

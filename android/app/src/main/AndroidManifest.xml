@@ -2,6 +2,7 @@
     package="fr.zilba.cook_n_shop">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <application
         android:label="cook_n_shop"
         android:name="${applicationName}"

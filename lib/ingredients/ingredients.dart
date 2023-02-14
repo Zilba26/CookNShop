@@ -1,8 +1,10 @@
+import 'package:cook_n_shop/components/unite_dropdown_button.dart';
 import 'package:cook_n_shop/my_shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/ingredient.dart';
 import '../models/recipe.dart';
+import '../models/units.dart';
 
 class Ingredients extends StatefulWidget {
   const Ingredients({Key? key}) : super(key: key);
@@ -32,6 +34,7 @@ class _IngredientsState extends State<Ingredients> {
     List<Ingredient> localIngredients = MySharedPreferences.ingredients;
     setState(() {
       ingredients = localIngredients;
+      ingredients.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     });
     _focusNodes = List.generate(
       ingredients.length,
@@ -92,7 +95,131 @@ class _IngredientsState extends State<Ingredients> {
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text(ingredients[index].name),
+                        child: GestureDetector(
+                          onTap: () {
+                            final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+                            final TextEditingController baseQuantityController = TextEditingController(text: "1");
+                            final TextEditingController equalityQuantityController = TextEditingController();
+                            final ValueNotifier<Unit> equalityUnit = ValueNotifier(baseUnits[0]);
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: Text(ingredients[index].name),
+                                  content: Form(
+                                    key: formKey,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            const Flexible(
+                                              flex: 1,
+                                              child: SizedBox(width: double.infinity,)
+                                            ),
+                                            Flexible(
+                                              flex: 2,
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: TextFormField(
+                                                      controller: baseQuantityController,
+                                                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                                      decoration: const InputDecoration(
+                                                        hintText: 'Quantité',
+                                                      ),
+                                                      validator: (String? value) {
+                                                        if (value == null || value.isEmpty) {
+                                                          return 'Veuillez entrer une quantité';
+                                                        }
+                                                        return null;
+                                                      },
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8.0),
+                                                  Text(ingredients[index].unit.unit)
+                                                ],
+                                              ),
+                                            ),
+                                            const Flexible(
+                                                flex: 1,
+                                                child: SizedBox(width: double.infinity,)
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 16.0),
+                                        Row(
+                                          children: [
+                                            const Flexible(
+                                              flex: 1,
+                                              child: SizedBox(width: double.infinity,)
+                                            ),
+                                            Flexible(
+                                              flex: 2,
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: TextFormField(
+                                                      controller: equalityQuantityController,
+                                                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                                      decoration: const InputDecoration(
+                                                        hintText: 'Quantité',
+                                                      ),
+                                                      validator: (String? value) {
+                                                        if (value == null || value.isEmpty) {
+                                                          return 'Veuillez entrer une quantité';
+                                                        }
+                                                        if (ingredients[index].unit.unit == equalityUnit.value.unit) {
+                                                          return 'Veuillez choisir une unité différente';
+                                                        }
+                                                        return null;
+                                                      },
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8.0),
+                                                  UniteDropdownButton(
+                                                    controller: equalityUnit,
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                            const Flexible(
+                                              flex: 1,
+                                              child: SizedBox(width: double.infinity,)
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('Annuler'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        if (formKey.currentState!.validate()) {
+                                          setState(() {
+                                            Ingredient ingredient = ingredients[index];
+                                            ingredient.quantityEquality = int.parse(equalityQuantityController.text) / int.parse(baseQuantityController.text);
+                                            ingredient.unitEquality = equalityUnit.value;
+                                            MySharedPreferences.updateIngredient(ingredient);
+                                          });
+                                          Navigator.pop(context);
+                                        }
+                                      },
+                                      child: const Text('Valider'),
+                                    ),
+                                  ],
+                                );
+                              }
+                            );
+                          },
+                          child: Text(ingredients[index].name)
+                        ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.remove),

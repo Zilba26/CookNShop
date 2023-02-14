@@ -6,6 +6,7 @@ class Recipe {
   String name;
   String? description;
   String? image;
+  bool isNetworkImage = false;
   List<RecipeIngredient> ingredients;
   List<String> steps;
 
@@ -16,6 +17,7 @@ class Recipe {
     required this.image,
     required this.ingredients,
     required this.steps,
+    this.isNetworkImage = false,
   }) : id = id ?? MySharedPreferences.lastRecipeId + 1;
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class Recipe {
       image: json['image'],
       ingredients: (json['ingredients'].runtimeType == List<RecipeIngredient>) ? List<RecipeIngredient>.from(json['ingredients']) : List<RecipeIngredient>.from(json['ingredients'].map((x) => RecipeIngredient.fromJson(x))),
       steps: List<String>.from(json['steps']),
+      isNetworkImage: json['isNetworkImage'] ?? false,
     );
   }
 

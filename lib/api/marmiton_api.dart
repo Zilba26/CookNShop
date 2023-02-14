@@ -83,10 +83,14 @@ class MarmitonApi {
       if (ingredientQuantity != null) {
         if (ingredientQuantity.isNotEmpty) {
           final quantityAndUnit = ingredientQuantity.trim().split(" ");
-          quantity = int.parse(quantityAndUnit[0]);
-          if (quantityAndUnit.length > 1) {
-            quantityAndUnit.removeAt(0);
-            unit = baseUnits.firstWhere((element) => element.unit == quantityAndUnit.join(" "), orElse: () => baseUnits[0]);
+          try {
+            quantity = int.parse(quantityAndUnit[0]);
+            if (quantityAndUnit.length > 1) {
+              quantityAndUnit.removeAt(0);
+              unit = baseUnits.firstWhere((element) => element.unit == quantityAndUnit.join(" "), orElse: () => baseUnits[0]);
+            }
+          } catch (e) {
+            quantity = null;
           }
         }
       }

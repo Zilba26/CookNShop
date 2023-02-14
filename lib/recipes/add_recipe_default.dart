@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:cook_n_shop/components/unite_dropdown_button.dart';
 import 'package:cook_n_shop/models/ingredient.dart';
 import 'package:cook_n_shop/models/recipe.dart';
@@ -5,6 +8,10 @@ import 'package:cook_n_shop/models/recipe_ingredient.dart';
 import 'package:cook_n_shop/models/units.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+
 
 import '../my_shared_preferences.dart';
 
@@ -31,6 +38,7 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
   bool _stepValidate = true;
 
   String? image;
+  bool isNetworkImage = false;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
@@ -84,50 +92,106 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
 
   static String _displayStringForOption(Ingredient option) => option.name;
 
+  Future<String?> _validateImageFormField(value) async {
+    if (value.isEmpty) {
+      setState(() {
+        image = null;
+      });
+      return null;
+    } else {
+      try {
+        Uri uri = Uri.parse(value);
+        final response = await http.get(uri).timeout(const Duration(seconds: 10));
+        if (response.statusCode != 200) {
+          return "L'image n'a pas été trouvé, vérifiez l'URL";
+        }
+        var documentDirectory = await getApplicationDocumentsDirectory();
+        var firstPath = "${documentDirectory.path}/images/recipe/${MySharedPreferences.lastRecipeId}";
+        var filePathAndName = '${documentDirectory.path}/images/recipe/${MySharedPreferences.lastRecipeId}/${uri.pathSegments.last}';
+
+        await Directory(firstPath).create(recursive: true);
+        File file2 = File(filePathAndName);
+        file2.writeAsBytesSync(response.bodyBytes);
+        setState(() {
+          image = filePathAndName;
+          isNetworkImage = false;
+        });
+        return null;
+      } catch (e) {
+        return "URL invalide, respectez le format http";
+      }
+    }
+  }
+
   void showDialogImage(context) {
     TextEditingController imageController = TextEditingController();
+    String? errorText;
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text("Ajouter une image"),
-          content: TextField(
-            controller: imageController,
-            decoration: const InputDecoration(
-                labelText: "URL de l'image"
-            ),
-            onSubmitted: (value) {
-              setState(() {
-                if (value.isEmpty) {
-                  image = null;
-                } else {
-                  image = value;
-                }
-              });
-              Navigator.of(context).pop();
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text("Annuler"),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  if (imageController.text.isEmpty) {
-                    image = null;
-                  } else {
-                    image = imageController.text;
-                  }
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text("Valider"),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setAlertDialogState) {
+            return AlertDialog(
+              title: const Text("Ajouter une image"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton(
+                    onPressed: () async {
+                      final ImagePicker picker = ImagePicker();
+                      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+                      if (image == null) return;
+
+                      var documentDirectory = await getApplicationDocumentsDirectory();
+                      var firstPath = "${documentDirectory.path}/images/recipe/${MySharedPreferences.lastRecipeId}";
+                      var filePathAndName = '${documentDirectory.path}/images/recipe/${MySharedPreferences.lastRecipeId}/${image.name}';
+
+                      await Directory(firstPath).create(recursive: true);
+                      File file2 = File(filePathAndName);
+                      file2.writeAsBytesSync(await image.readAsBytes());
+                      setState(() {
+                        this.image = filePathAndName;
+                        isNetworkImage = false;
+                      });
+                      if (!mounted) return;
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("Depuis le stockage"),
+                  ),
+                  TextFormField(
+                    controller: imageController,
+                    decoration: InputDecoration(
+                      labelText: "URL de l'image",
+                      errorText: errorText,
+                    ),
+                    onFieldSubmitted: (value) async {
+                      errorText = await _validateImageFormField(value);
+                      setAlertDialogState(() {});
+                      if (!mounted || errorText != null) return;
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("Annuler"),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    errorText = await _validateImageFormField(imageController.text);
+                    setAlertDialogState(() {});
+                    if (!mounted || errorText != null) return;
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("Valider"),
+                ),
+              ],
+            );
+          }
         );
       }
     );
@@ -156,7 +220,7 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                         onTap: () {
                           showDialogImage(context);
                         },
-                        child: Image.network(image!),
+                        child: isNetworkImage ? Image.network(image!) : Image.file(File(image!))
                       )
                       : Center(
                         child: CircleAvatar(
@@ -246,9 +310,6 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                                   return TextField(
                                     controller: fieldTextEditingController,
                                     focusNode: fieldFocusNode,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly
-                                    ],
                                     onSubmitted: (String value) {
                                       onFieldSubmitted();
                                     },
@@ -266,6 +327,9 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                               child: TextField(
                                 controller: _ingredientsControllers[_ingredientsControllers.indexOf(controller)].quantityController,
                                 keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly
+                                ],
                                 decoration: const InputDecoration(
                                   labelText: "Quantité",
                                   border: OutlineInputBorder()
@@ -376,7 +440,7 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                       steps.removeAt(i);
                     }
                   }
-                  Recipe recipe = Recipe(name: name, description: description, image: image, ingredients: ingredients, steps: steps);
+                  Recipe recipe = Recipe(name: name, description: description, image: image, isNetworkImage: isNetworkImage, ingredients: ingredients, steps: steps);
                   MySharedPreferences.addRecipe(recipe);
                   Navigator.pop(context);
                 },
