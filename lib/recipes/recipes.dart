@@ -17,6 +17,10 @@ class Recipes extends StatefulWidget {
 class _RecipesState extends State<Recipes> {
   List<Recipe> recipes = MySharedPreferences.recipes;
 
+  setThisState() {
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,10 +79,10 @@ class _RecipesState extends State<Recipes> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return const AddRecipe();
-              }).then((value) => setState(() {}));
+            context: context,
+            builder: (BuildContext context) {
+              return const AddRecipe();
+            }).then((value) => setThisState());
         },
         child: const Icon(Icons.add),
       ),

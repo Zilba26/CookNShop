@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:cook_n_shop/models/ingredient.dart';
 import 'package:cook_n_shop/models/recipe.dart';
@@ -15,7 +16,9 @@ class MySharedPreferences {
   static late int _lastRecipeId;
   static late List<ShoppingItem> _shoppingList;
   static late List<Unit> _unites;
+  static late Color _themeColor;
   static Set<String> errorsMSG = {};
+  static const baseColor = 0xAD0000FF;
 
   static Future init() async {
     _prefs = await SharedPreferences.getInstance();
@@ -31,6 +34,9 @@ class MySharedPreferences {
     if (_prefs.getString('unites') == null) {
       await _prefs.setString('unites', '[]');
     }
+    if (_prefs.getInt('themeColor') == null) {
+      await _prefs.setInt('themeColor', baseColor);
+    }
     //reset all
     // await _prefs.setString('ingredients', '[]');
     // await _prefs.setString('recipes', '[]');
@@ -40,9 +46,7 @@ class MySharedPreferences {
         jsonDecode(_prefs.getString('ingredients')!)
             .map((model) => Ingredient.fromJson(model))
             .toList());
-    // _ingredients.forEach((element) {
-    //   print(element.id);
-    // });
+
     _lastIngredientId = _ingredients.isNotEmpty ? _ingredients.last.id : 4;
     _recipes = List<Recipe>.from(
         jsonDecode(_prefs.getString('recipes')!)
@@ -58,6 +62,8 @@ class MySharedPreferences {
         jsonDecode(_prefs.getString('unites')!)
             .map((model) => Unit.fromJson(model))
             .toList());
+
+    _themeColor = Color(_prefs.getInt('themeColor')!);
   }
 
   static List<Ingredient> get ingredients => _ingredients;
@@ -66,6 +72,11 @@ class MySharedPreferences {
   static int get lastRecipeId => _lastRecipeId;
   static List<ShoppingItem> get shoppingList => _shoppingList;
   static List<Unit> get unites => _unites;
+  static Color get themeColor => _themeColor;
+  static set themeColor(Color color) {
+    _themeColor = color;
+    _prefs.setInt('themeColor', color.value);
+  }
 
   static Future addIngredient(Ingredient ingredient) async {
     _ingredients.add(ingredient);
@@ -133,6 +144,11 @@ class MySharedPreferences {
 
   static Future clearShoppingList() async {
     _shoppingList = [];
+    await _prefs.setString('shoppingList', jsonEncode(_shoppingList));
+  }
+
+  static Future updateCheckedShoppingListItem(ShoppingItem shoppingItem) async {
+    _shoppingList[_shoppingList.indexWhere((element) => element.ingredient.id == shoppingItem.ingredient.id)] = shoppingItem;
     await _prefs.setString('shoppingList', jsonEncode(_shoppingList));
   }
 

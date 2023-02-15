@@ -2,9 +2,9 @@ import 'package:cook_n_shop/api/chat_gpt_api.dart';
 import 'package:cook_n_shop/ingredients/ingredients.dart';
 import 'package:cook_n_shop/my_shared_preferences.dart';
 import 'package:cook_n_shop/recipes/recipes.dart';
-import 'package:cook_n_shop/settings/settings.dart';
 import 'package:cook_n_shop/shop/shop.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,9 +21,22 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
+MaterialColor getMaterialColorFromColor(Color color) {
+  final primaryValue = color.value;
+
+  Map<int, Color> swatch = <int, Color>{};
+  swatch[50] = color.withOpacity(0.1);
+  for (int i = 1; i <= 9; i++) {
+    final int index = i * 100;
+    swatch[index] = color.withAlpha(255 - (i * 10));
+  }
+
+  return MaterialColor(primaryValue, swatch);
+}
+
 class _MyAppState extends State<MyApp> {
 
-  ThemeData _theme = ThemeData();
+  ThemeData _theme = ThemeData(primarySwatch: getMaterialColorFromColor(MySharedPreferences.themeColor));
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +49,7 @@ class _MyAppState extends State<MyApp> {
           setState(() {
             _theme = theme;
           });
+          MySharedPreferences.themeColor = theme.primaryColor;
         },
       ),
     );
@@ -81,10 +95,51 @@ class _MainState extends State<Main> {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => Settings(
-                    onThemeChanged: widget.onThemeChanged
-                  )));
+              Color pickerColor = Theme.of(context).primaryColor;
+              showDialog(
+                context: context,
+                builder: (context) => StatefulBuilder(
+                  builder: (context, setDialogState) {
+                    return AlertDialog(
+                      content: SingleChildScrollView(
+                        child: ColorPicker(
+                          pickerColor: Theme.of(context).primaryColor,
+                          onColorChanged: (color) {
+                            setDialogState(() {
+                              widget.onThemeChanged(ThemeData(primarySwatch: getMaterialColorFromColor(color)));
+                            });
+                          },
+                        ),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              widget.onThemeChanged(ThemeData(primarySwatch: getMaterialColorFromColor(const Color(MySharedPreferences.baseColor))));
+                            });
+                          },
+                          child: const Text("Reset"),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            setState(() {
+                              widget.onThemeChanged(ThemeData(primarySwatch: getMaterialColorFromColor(pickerColor)));
+                            });
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text("Fermer"),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text("Valider"),
+                        ),
+                      ],
+                    );
+                  }
+                )
+              );
             },
           ),
         ],

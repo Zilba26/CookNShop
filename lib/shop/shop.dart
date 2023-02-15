@@ -14,7 +14,6 @@ class Shop extends StatefulWidget {
 
 class _ShopState extends State<Shop> {
 
-  late List<bool> _checked;
   late List<ShoppingItem> _shoppingList;
 
   @override
@@ -26,7 +25,6 @@ class _ShopState extends State<Shop> {
   void setShoppingList() {
     setState(() {
       _shoppingList = MySharedPreferences.shoppingList;
-      _checked = List<bool>.filled(_shoppingList.length, false);
     });
   }
 
@@ -47,12 +45,13 @@ class _ShopState extends State<Shop> {
               },
               child: ListTile(
                 leading: Checkbox(
-                  value: _checked[_shoppingList.indexOf(elt)],
+                  value: elt.isChecked,
                   onChanged: (value) async {
                     if (value != null) {
                       setState(() {
-                        _checked[_shoppingList.indexOf(elt)] = value;
+                        elt.isChecked = value;
                       });
+                      await MySharedPreferences.updateCheckedShoppingListItem(elt);
                     }
                   },
                 ),
@@ -124,8 +123,8 @@ class _ShopState extends State<Shop> {
                       ),
                       TextButton(
                         onPressed: () {
-                          for (int i = _checked.length - 1; i >= 0; i--) {
-                            if (_checked[i]) {
+                          for (int i = _shoppingList.length - 1; i >= 0; i--) {
+                            if (_shoppingList[i].isChecked) {
                               MySharedPreferences.removeIngredientFromShoppingList(MySharedPreferences.ingredients.where((element) => element.id == _shoppingList[i].ingredient.id).first);
                             }
                           }
