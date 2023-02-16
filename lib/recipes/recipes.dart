@@ -1,7 +1,7 @@
-import 'package:cook_n_shop/models/ingredient.dart';
 import 'package:cook_n_shop/models/recipe_ingredient.dart';
 import 'package:cook_n_shop/my_shared_preferences.dart';
 import 'package:cook_n_shop/recipes/add_recipe.dart';
+import 'package:cook_n_shop/recipes/add_recipe_default.dart';
 import 'package:cook_n_shop/recipes/recipe_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -64,6 +64,7 @@ class _RecipesState extends State<Recipes> {
                       }
                       break;
                     case "edit":
+                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => AddRecipeDefault(recipe: recipes[index],))).then((value) => setThisState());
                       break;
                     case "delete":
                       await MySharedPreferences.removeRecipe(recipes[index]);

@@ -108,6 +108,12 @@ class MySharedPreferences {
         jsonEncode(_recipes.map((e) => e.toJson()).toList()));
   }
 
+  static Future updateRecipe(Recipe recipe) async {
+    _recipes[_recipes.indexWhere((element) => element.id == recipe.id)] = recipe;
+    await _prefs.setString('recipes',
+        jsonEncode(_recipes.map((e) => e.toJson()).toList()));
+  }
+
   static Future removeRecipe(Recipe recipe) async {
     _recipes.remove(recipe);
     await _prefs.setString('recipes',

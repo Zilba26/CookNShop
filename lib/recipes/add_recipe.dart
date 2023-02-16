@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:cook_n_shop/api/marmiton_api.dart';
 import 'package:cook_n_shop/models/recipe.dart';
 import 'package:cook_n_shop/my_shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+
 
 import 'add_recipe_default.dart';
 
@@ -20,6 +25,7 @@ class _AddRecipeState extends State<AddRecipe> {
 
   static String _displayStringForOption(Map<String, String> recipe) => recipe['title']!;
 
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -29,8 +35,11 @@ class _AddRecipeState extends State<AddRecipe> {
         children: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AddRecipeDefault()));
+              Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AddRecipeDefault())).then(
+                (value) {
+                  Navigator.pop(context);
+                }
+              );
             },
             child: const Text('Créer une recette'),
           ),
@@ -97,8 +106,24 @@ class _AddRecipeState extends State<AddRecipe> {
   }
 
   Future<void> addRecipe() async {
-    assert(recipe != null);
-    final recipeDetails = await MarmitonApi.recipe(recipe!['url']!);
-    MySharedPreferences.addRecipe(Recipe.fromJson(recipeDetails));
+    assert(this.recipe != null);
+    final recipeDetails = await MarmitonApi.recipe(this.recipe!['url']!);
+    Recipe recipe = Recipe.fromJson(recipeDetails);
+
+    Uri uri = Uri.parse(recipe.image!);
+    final response = await http.get(uri).timeout(const Duration(seconds: 10));
+
+    var documentDirectory = await getApplicationDocumentsDirectory();
+    var firstPath = "${documentDirectory.path}/images/recipe/${recipe.id}";
+    var filePathAndName = '${documentDirectory.path}/images/recipe/${recipe.id}/${uri.pathSegments.last}';
+
+    await Directory(firstPath).create(recursive: true);
+    File file2 = File(filePathAndName);
+    file2.writeAsBytesSync(response.bodyBytes);
+
+    recipe.image = filePathAndName;
+    recipe.isNetworkImage = false;
+
+    MySharedPreferences.addRecipe(recipe);
   }
 }

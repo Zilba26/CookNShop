@@ -19,13 +19,16 @@ class _IngredientOption {
   Ingredient? ingredient;
   TextEditingController controller;
   ValueNotifier<Unit> unitNotifier;
-  TextEditingController quantityController = TextEditingController();
+  TextEditingController quantityController;
 
-  _IngredientOption({required this.controller}) : unitNotifier = ValueNotifier(baseUnits[0]);
+  _IngredientOption({required this.controller, this.ingredient, quantityController, unit}) : unitNotifier = ValueNotifier(unit ?? baseUnits[0]), quantityController = quantityController ?? TextEditingController();
 }
 
 class AddRecipeDefault extends StatefulWidget {
-  const AddRecipeDefault({Key? key}) : super(key: key);
+
+  final Recipe? recipe;
+
+  const AddRecipeDefault({Key? key, this.recipe}) : super(key: key);
 
   @override
   State<AddRecipeDefault> createState() => _AddRecipeDefaultState();
@@ -37,21 +40,45 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
   bool _ingredientValidate = true;
   bool _stepValidate = true;
 
-  String? image;
-  bool isNetworkImage = false;
+  late String? image = widget.recipe?.image;
+  late bool isNetworkImage = widget.recipe?.isNetworkImage ?? false;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final List<_IngredientOption> _ingredientsControllers = [_IngredientOption(controller: TextEditingController())];
-  final List<TextEditingController> _stepsControllers = [TextEditingController()];
+  final List<_IngredientOption> _ingredientsControllers = [];
+  final List<TextEditingController> _stepsControllers = [];
 
   @override
   void initState() {
-    _stepsControllers.first.addListener(() {
-      if (_stepsControllers.last.text.isNotEmpty) {
-        _addStepController();
-      }
-    });
+    _nameController.text = widget.recipe?.name ?? "";
+    _descriptionController.text = widget.recipe?.description ?? "";
+
+
+    if (widget.recipe != null) {
+      _ingredientsControllers.addAll(widget.recipe!.ingredients.map((e) => _IngredientOption(
+        controller: TextEditingController(text: e.ingredient.name),
+        ingredient: e.ingredient,
+        quantityController: TextEditingController(text: e.quantity == null ? "" : e.quantity.toString()),
+        unit: e.ingredient.unit,
+      )).toList());
+      _stepsControllers.addAll(widget.recipe!.steps.map((e) => TextEditingController(text: e)).toList());
+    } else {
+      _ingredientsControllers.add(_IngredientOption(controller: TextEditingController()));
+      _stepsControllers.add(TextEditingController());
+    }
+    for (int i = 0; i < _stepsControllers.length; i++) {
+      _stepsControllers[i].addListener(() {
+        if (_stepsControllers.last.text.isNotEmpty) {
+          _addStepController();
+        } else {
+          while (_stepsControllers.length > 1 && _stepsControllers[_stepsControllers.length - 2].text.isEmpty) {
+            setState(() {
+              _stepsControllers.removeLast();
+            });
+          }
+        }
+      });
+    }
 
     super.initState();
   }
@@ -64,7 +91,7 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
       if (_stepsControllers.last.text.isNotEmpty) {
         _addStepController();
       } else {
-        if (_stepsControllers[_stepsControllers.length - 2].text.isEmpty) {
+        while (_stepsControllers.length > 1 && _stepsControllers[_stepsControllers.length - 2].text.isEmpty) {
           setState(() {
             _stepsControllers.removeLast();
           });
@@ -75,6 +102,7 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
 
   void _addIngredientController() {
     setState(() {
+      print("add ingredient");
       _ingredientsControllers.add(_IngredientOption(controller: TextEditingController()));
     });
     _ingredientsControllers.last.controller.addListener(() {
@@ -201,7 +229,7 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Création d'une recette"),
+        title: Text("${widget.recipe == null ? "Création" : "Modification"} d'une recette"),
       ),
       body: SingleChildScrollView(
         child: Form(
@@ -209,12 +237,13 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black)
-                  ),
+                padding: const EdgeInsets.all(12.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  //height: 200,
+                  // decoration: BoxDecoration(
+                  //   border: Border.all(color: Colors.black)
+                  // ),
                   child: image != null
                       ? GestureDetector(
                         onTap: () {
@@ -262,6 +291,13 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                   ),
                 ),
               ),
+              SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 10.0, top: 20.0, bottom: 10.0),
+                  child: Text("Ingredients :", style: Theme.of(context).textTheme.titleLarge,),
+                ),
+              ),
               FormField(
                 validator: (value) {
                   if (_ingredientsControllers.isEmpty || _ingredientsControllers.first.controller.text.isEmpty) {
@@ -272,6 +308,12 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                 builder: (FormFieldState state) {
                   return Column(
                     children: _ingredientsControllers.map((controller) {
+                      String initialValue;
+                      if (widget.recipe != null && _ingredientsControllers.indexOf(controller) < widget.recipe!.ingredients.length) {
+                        initialValue = widget.recipe!.ingredients[_ingredientsControllers.indexOf(controller)].ingredient.name;
+                      } else {
+                        initialValue = "";
+                      }
                       return Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
@@ -279,6 +321,7 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                             Expanded(
                               flex: 3,
                               child: Autocomplete<Ingredient>(
+                                initialValue: TextEditingValue(text: initialValue),
                                 displayStringForOption: _displayStringForOption,
                                 optionsBuilder: (TextEditingValue textEditingValue) {
                                   if (textEditingValue.text.isEmpty) {
@@ -401,7 +444,7 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                   _ingredientValidate = _ingredientsControllers.first.controller.text.isNotEmpty;
                   _stepValidate = _stepsControllers.first.text.isNotEmpty;
                   if (!_formKey.currentState!.validate()) return;
-                    String name = _nameController.text;
+                  String name = _nameController.text;
                   String description = _descriptionController.text;
                   List<RecipeIngredient> ingredients = [];
                   for (int i = 0; i < _ingredientsControllers.length; i++) {
@@ -440,9 +483,15 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                       steps.removeAt(i);
                     }
                   }
-                  Recipe recipe = Recipe(name: name, description: description, image: image, isNetworkImage: isNetworkImage, ingredients: ingredients, steps: steps);
-                  MySharedPreferences.addRecipe(recipe);
-                  Navigator.pop(context);
+                  if (widget.recipe == null) {
+                    Recipe recipe = Recipe(name: name, description: description, image: image, isNetworkImage: isNetworkImage, ingredients: ingredients, steps: steps);
+                    MySharedPreferences.addRecipe(recipe);
+                    Navigator.pop(context);
+                  } else {
+                    Recipe recipe = Recipe(id: widget.recipe!.id, name: name, description: description, image: image, isNetworkImage: isNetworkImage, ingredients: ingredients, steps: steps);
+                    MySharedPreferences.updateRecipe(recipe);
+                    Navigator.pop(context);
+                  }
                 },
                 child: Container(
                   padding: const EdgeInsets.all(14),
@@ -450,7 +499,7 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                     color: Theme.of(context).primaryColor,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Text("Ajouter la recette", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 18),)
+                  child: Text("${widget.recipe == null ? "Ajouter" : "Modifier"} la recette", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 18),)
                 ),
               ),
               const SizedBox(height: 20),
