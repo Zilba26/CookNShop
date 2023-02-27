@@ -50,10 +50,13 @@ class _RecipeScreenState extends State<RecipeScreen> {
           children: [
             getImage(context),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
               child: Text(widget.recipe.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
             ),
-            if (widget.recipe.description != null) Text(widget.recipe.description!),
+            if (widget.recipe.description != null) Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(widget.recipe.description!),
+            ),
             Column(
               children: [
                 Column(

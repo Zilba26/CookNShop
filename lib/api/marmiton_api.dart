@@ -14,17 +14,17 @@ class MarmitonApi {
   static const recipeURL = '$baseURL/recettes';
   static const searchURL = '$recipeURL/recherche.aspx';
 
-  static Future<String> search(String query) async {
+  static Future<String?> search(String query) async {
     Uri uri = Uri.parse('$searchURL?aqt=$query');
     http.Response? response;
     try {
-      response = await http.get(uri).timeout(const Duration(seconds: 5));
+      response = await http.get(uri).timeout(const Duration(seconds: 10));
     } on TimeoutException catch (e) {
       MySharedPreferences.errorsMSG.add("TimeoutException:");
     } catch (e) {
       MySharedPreferences.errorsMSG.add("Exception:");
     }
-    return response!.body;
+    return response?.body;
   }
 
   static Future<String> searchRecipe(String recipe) async {
@@ -124,6 +124,7 @@ class MarmitonApi {
 
   static Future<List<Map<String, String>>> searchRecipes(String query) async {
     final response = await search(query);
+    if (response == null) return [];
     return parseSearchResults(response);
   }
 
