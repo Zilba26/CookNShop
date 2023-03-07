@@ -102,7 +102,6 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
 
   void _addIngredientController() {
     setState(() {
-      print("add ingredient");
       _ingredientsControllers.add(_IngredientOption(controller: TextEditingController()));
     });
     _ingredientsControllers.last.controller.addListener(() {
@@ -499,7 +498,7 @@ class _AddRecipeDefaultState extends State<AddRecipeDefault> {
                     color: Theme.of(context).primaryColor,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Text("${widget.recipe == null ? "Ajouter" : "Modifier"} la recette", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 18),)
+                  child: Text("${widget.recipe == null ? "Ajouter" : "Modifier"} la recette", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 18),)
                 ),
               ),
               const SizedBox(height: 20),

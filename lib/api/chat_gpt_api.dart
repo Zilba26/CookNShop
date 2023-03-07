@@ -12,7 +12,6 @@ class ChatGPTAPI {
   }
 
   Future<String?> getQuantityAndUnit(Map data) async {
-    print(data.toString());
     String prompt = baseQuantityAndUnitPrompt + data.toString();
     return await request(prompt);
   }

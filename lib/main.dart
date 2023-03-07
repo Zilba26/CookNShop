@@ -1,4 +1,3 @@
-import 'package:cook_n_shop/api/chat_gpt_api.dart';
 import 'package:cook_n_shop/ingredients/ingredients.dart';
 import 'package:cook_n_shop/my_shared_preferences.dart';
 import 'package:cook_n_shop/recipes/recipes.dart';

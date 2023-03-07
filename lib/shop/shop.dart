@@ -31,7 +31,7 @@ class _ShopState extends State<Shop> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
+      body: _shoppingList.isEmpty ? const Center(child: Text("Aucun ingrédient"),) : SingleChildScrollView(
         child: Column(
           children: _shoppingList.map((elt) {
             return Dismissible(

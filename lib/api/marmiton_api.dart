@@ -19,7 +19,7 @@ class MarmitonApi {
     http.Response? response;
     try {
       response = await http.get(uri).timeout(const Duration(seconds: 10));
-    } on TimeoutException catch (e) {
+    } on TimeoutException {
       MySharedPreferences.errorsMSG.add("TimeoutException:");
     } catch (e) {
       MySharedPreferences.errorsMSG.add("Exception:");

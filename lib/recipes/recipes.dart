@@ -24,7 +24,9 @@ class _RecipesState extends State<Recipes> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView.builder(
+      body: recipes.isEmpty ? const Center(
+          child: Text("Aucune recette"),
+        ) : ListView.builder(
         itemCount: recipes.length,
         itemBuilder: (BuildContext context, int index) {
           return GestureDetector(

@@ -84,7 +84,7 @@ class _AddRecipeState extends State<AddRecipe> {
           onPressed: () {
             Navigator.pop(context);
           },
-          child: const Text('Cancel'),
+          child: const Text('Fermer'),
         ),
         if (_isMarmiton)
           TextButton(
@@ -95,11 +95,11 @@ class _AddRecipeState extends State<AddRecipe> {
                   setState(() {});
                   if (mounted) Navigator.pop(context);
                 } else {
-                  print('Recipe already exists');
+                  //TODO : recipe already exists
                 }
               }
             },
-            child: const Text('Add'),
+            child: const Text('Ajouter'),
           ),
       ],
     );

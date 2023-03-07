@@ -85,7 +85,9 @@ class _IngredientsState extends State<Ingredients> {
               ),
             ),
           ),
-          Expanded(
+          ingredients.isEmpty ? const Center(
+            child: Text('Aucun ingrédient'),
+          ) : Expanded(
             child: ListView.builder(
               shrinkWrap: true,
               itemCount: ingredients.length,

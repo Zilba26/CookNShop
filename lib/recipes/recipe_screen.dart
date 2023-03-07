@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:math' as Math;
+import 'dart:math' as math;
 
 import 'package:cook_n_shop/components/ingredient_recipe_screen.dart';
 import 'package:cook_n_shop/models/recipe.dart';
@@ -83,7 +83,7 @@ class _RecipeScreenState extends State<RecipeScreen> {
                     //     const SizedBox(height: 4)
                     //   ],
                     // );
-                  }).toList().sublist(0, showAllIngredients ? widget.recipe.ingredients.length : Math.min(4, widget.recipe.ingredients.length))
+                  }).toList().sublist(0, showAllIngredients ? widget.recipe.ingredients.length : math.min(4, widget.recipe.ingredients.length))
                 ),
                 if (widget.recipe.ingredients.length > 4) GestureDetector(
                   onTap: () {
