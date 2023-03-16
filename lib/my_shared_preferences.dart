@@ -218,4 +218,10 @@ class MySharedPreferences {
     await _prefs.setString('unites',
         jsonEncode(_unites.map((e) => e.toJson()).toList()));
   }
+
+  static Future reorderShoppingListItem(int oldIndex, int newIndex) async {
+    final ShoppingItem item = _shoppingList.removeAt(oldIndex);
+    _shoppingList.insert(newIndex, item);
+    await _prefs.setString('shoppingList', jsonEncode(_shoppingList));
+  }
 }

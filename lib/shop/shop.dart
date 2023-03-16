@@ -31,10 +31,20 @@ class _ShopState extends State<Shop> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _shoppingList.isEmpty ? const Center(child: Text("Aucun ingrédient"),) : SingleChildScrollView(
-        child: Column(
-          children: _shoppingList.map((elt) {
-            return Dismissible(
+      body: _shoppingList.isEmpty ? const Center(child: Text("Aucun ingrédient"),) : ReorderableListView(
+        buildDefaultDragHandles: false,
+        onReorder: (int oldIndex, int newIndex) {
+          if (oldIndex < newIndex) {
+            newIndex -= 1;
+          }
+          MySharedPreferences.reorderShoppingListItem(oldIndex, newIndex);
+          setState(() {});
+        },
+        children: _shoppingList.map((elt) {
+          return ReorderableDragStartListener(
+            key: ValueKey<int>(elt.ingredient.id),
+            index: _shoppingList.indexOf(elt),
+            child: Dismissible(
               key: ValueKey<int>(elt.ingredient.id),
               background: Container(
                 color: Colors.red,
@@ -44,6 +54,7 @@ class _ShopState extends State<Shop> {
                 setState(() {});
               },
               child: ListTile(
+                key: ValueKey<int>(elt.ingredient.id),
                 leading: Checkbox(
                   value: elt.isChecked,
                   onChanged: (value) async {
@@ -58,9 +69,9 @@ class _ShopState extends State<Shop> {
                 title: Text(elt.ingredient.name),
                 trailing: Text(elt.quantity.toString() + elt.ingredient.unit.unit),
               ),
-            );
-          }).toList()
-        ),
+            ),
+          );
+        }).toList()
       ),
       floatingActionButton: SpeedDial(
         spacing: 8,
